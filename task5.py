@@ -81,11 +81,14 @@ def train_model_return_scores_clamp(train_df,test_df) -> pd.DataFrame:
     #test_scores = pd.DataFrame()
     #return test_scores 
     # Separate features and labels
-    X_train = train_df.drop(columns=["label"])
-    y_train = train_df["label"]
-
-    X_test = test_df.copy()
-
+    #X_train = train_df.drop(columns=["label"])
+    #y_train = train_df["label"]
+    #X_test = test_df.copy()
+    label_column = "label" if "label" in train_df.columns else train_df.columns[-1]
+    X_train = train_df.drop(columns=[label_column])
+    y_train = train_df[label_column]
+    X_test = test_df.drop(columns=["label"], errors="ignore")
+    
     # Train model
     model = LogisticRegression(
         C=1.0,
@@ -146,11 +149,14 @@ def train_model_return_scores_unsw(train_df,test_df) -> pd.DataFrame:
     # TODO: Read the function description in https://github.gatech.edu/pages/cs6035-tools/cs6035-tools.github.io/Projects/Machine_Learning/Task5.html and implement the function as described
     #test_scores = pd.DataFrame()
     #return test_scores 
-    X_train = train_df.drop(columns=["label"])
-    y_train = train_df["label"]
-
-    X_test = test_df.copy()
-
+    #X_train = train_df.drop(columns=["label"])
+    #y_train = train_df["label"]
+    #X_test = test_df.copy()
+    label_column = "label" if "label" in train_df.columns else train_df.columns[-1]
+    X_train = train_df.drop(columns=[label_column])
+    y_train = train_df[label_column]
+    X_test = test_df.drop(columns=["label"], errors="ignore")
+    
     model = RandomForestClassifier(
         n_estimators=300,
         max_depth=20,
@@ -209,13 +215,23 @@ def train_model_return_scores_phiusiil(train_df,test_df) -> pd.DataFrame:
     # TODO: Read the function description in https://github.gatech.edu/pages/cs6035-tools/cs6035-tools.github.io/Projects/Machine_Learning/Task5.html and implement the function as described
     #test_scores = pd.DataFrame()
     #return test_scores
+    label_column = "label" if "label" in train_df.columns else train_df.columns[-1]
     # Labels
-    y_train = train_df["label"]
+    #y_train = train_df["label"]
+    y_train = train_df[label_column]
 
-    # Feature engineering
-    X_train = extract_url_features(train_df.iloc[:, 0])
-    X_test = extract_url_features(test_df.iloc[:, 0])
-
+    url_column = "url" if "url" in train_df.columns else None
+    if url_column is None:
+        non_label_columns = [col for col in train_df.columns if col != label_column]
+        url_column = non_label_columns[0] if non_label_columns else train_df.columns[0]
+   
+   # Feature engineering
+    #X_train = extract_url_features(train_df.iloc[:, 0])
+    #X_test = extract_url_features(test_df.iloc[:, 0])
+    X_train = extract_url_features(train_df[url_column])
+    test_url_column = url_column if url_column in test_df.columns else test_df.columns[0]
+    X_test = extract_url_features(test_df[test_url_column])
+    
     # Model
     model = LogisticRegression(
         C=1.0,
