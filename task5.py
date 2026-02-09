@@ -4,6 +4,7 @@ import re
 import math
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 
 def shannon_entropy(s: str) -> float:
     if not s:
@@ -88,6 +89,18 @@ def train_model_return_scores_clamp(train_df,test_df) -> pd.DataFrame:
     X_train = train_df.drop(columns=[label_column])
     y_train = train_df[label_column]
     X_test = test_df.drop(columns=["label"], errors="ignore")
+
+    imputer = SimpleImputer(strategy="median")
+    X_train = pd.DataFrame(
+        imputer.fit_transform(X_train),
+        columns=X_train.columns,
+        index=X_train.index
+    )
+    X_test = pd.DataFrame(
+        imputer.transform(X_test),
+        columns=X_test.columns,
+        index=X_test.index
+    )
     
     # Train model
     model = LogisticRegression(
@@ -123,24 +136,30 @@ def document_hyperparameter_tuning_unsw(train_df,test_df):
     and ability to capture nonlinear interactions.
 
     Parameters explored:
-    - n_estimators: [100, 200, 300]
-    - max_depth: [10, 20, None]
+    - n_estimators: [200, 300, 500]
+    - max_depth: [20, None]
     - min_samples_split: [2, 5]
     - min_samples_leaf: [1, 2]
+    - max_features: ["sqrt", None]
+    - class_weight: [None, "balanced"]
 
     Best performance was achieved with:
-    - n_estimators = 300
-    - max_depth = 20
-    - min_samples_split = 5
-    - min_samples_leaf = 2
+    - n_estimators = 500
+    - max_depth = None
+    - min_samples_split = 2
+    - min_samples_leaf = 1
+    - max_features = sqrt
+    - class_weight = balanced
     """
 
     hyperparameters = {
         "model": "RandomForestClassifier",
-        "n_estimators": 300,
-        "max_depth": 20,
-        "min_samples_split": 5,
-        "min_samples_leaf": 2,
+        "n_estimators": 500,
+        "max_depth": None,
+        "min_samples_split": 2,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "class_weight": "balanced",
         "random_state": 42
     }
     return hyperparameters
@@ -158,10 +177,12 @@ def train_model_return_scores_unsw(train_df,test_df) -> pd.DataFrame:
     X_test = test_df.drop(columns=["label"], errors="ignore")
     
     model = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=20,
-        min_samples_split=5,
-        min_samples_leaf=2,
+        n_estimators=500,
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        max_features="sqrt",
+        class_weight="balanced",
         random_state=42,
         n_jobs=-1
     )
@@ -252,5 +273,3 @@ def train_model_return_scores_phiusiil(train_df,test_df) -> pd.DataFrame:
         "index": test_df.index,
         "prob_label_1": prob_label_1
     })
-
-
